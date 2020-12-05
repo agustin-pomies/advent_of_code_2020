@@ -3,19 +3,26 @@ defmodule TobogganTrajectory do
     {0, 0}
   end
 
-  def movement do
-    {3, 1}
+  def slopes do
+    [{1, 1}, {3, 1}, {5, 1}, {7, 1}, {1, 2}]
   end
 
   def solve do
-    get_input()
-    |> parse_board()
-    |> begin_trajectory(initial_square())
-    |> show_output()
+    board = get_input("input.txt") |> parse_board()
+    tree_encounters = Enum.map(slopes(), &(tree_encounters(board, &1)))
+
+    IO.inspect(tree_encounters)
+
+    output = Enum.reduce(tree_encounters, 1, fn x, acc -> x * acc end)
+    show_output(output)
   end
 
-  def get_input do
-    case File.read("input.txt") do
+  def tree_encounters(board, movement) do
+    begin_trajectory(board, initial_square(), movement)
+  end
+
+  def get_input(file_name) do
+    case File.read(file_name) do
       {:ok, file}      -> String.split(file, "\n", trim: true)
       {:error, reason} -> reason
     end
@@ -39,14 +46,14 @@ defmodule TobogganTrajectory do
     %{square: ".", tree: "#"}
   end
 
-  def begin_trajectory(board, {x, y}, tree_encounters \\ 0) do
+  def begin_trajectory(board, {x, y}, movement, tree_encounters \\ 0) do
     initialized_board = move_to_initial_square(board, {x, y})
     new_tree_encounters = new_tree_encounters(initialized_board, tree_encounters)
-    result = travel_through_board(initialized_board, new_tree_encounters)
+    result = travel_through_board(movement, initialized_board, new_tree_encounters)
 
     case result do
-      {:halt, tree_encounters} -> tree_encounters
-      {:repeat_board, {new_x, new_y}, tree_encounters} -> begin_trajectory(board, {new_x, length(board) - new_y}, tree_encounters)
+      {:halt, result_tree_encounters}                          -> result_tree_encounters
+      {:repeat_board, {new_x, new_y}, result_tree_encounters}  -> begin_trajectory(board, {new_x, length(board) - new_y}, movement, result_tree_encounters)
     end
   end
 
@@ -56,19 +63,24 @@ defmodule TobogganTrajectory do
     |> Enum.map(&(Enum.drop(&1, x)))
   end
 
-  def travel_through_board([_ | [_ | _]] = board, tree_encounters) do
-    case apply_movement(board, movement()) do
-      {:travel, new_board} -> travel_through_board(new_board, new_tree_encounters(new_board, tree_encounters))
+  def travel_through_board(movement, [_ | [_ | _]] = board, tree_encounters) do
+    case apply_movement(board, movement) do
+      {:travel, new_board}            -> travel_through_board(movement, new_board, new_tree_encounters(new_board, tree_encounters))
       {:change_board, initial_square} -> {:repeat_board, initial_square, tree_encounters}
+      {:halt, final_board}            -> {:halt, new_tree_encounters(final_board, tree_encounters) }
     end
   end
 
-  def travel_through_board([_ | _], tree_encounters) do
+  def travel_through_board(_, [_ | _], tree_encounters) do
     {:halt, tree_encounters}
   end
 
-  def apply_movement(board, {x, y}) do
-    if length(hd(board)) > x, do: travel(board, {x, y}), else: change_board(board, x)
+  def apply_movement(board, movement = {x, y}) do
+    cond do
+      (length(board) > y) && (length(hd(board)) > x)  -> travel(board, movement)
+      length(hd(board)) <= x                          -> change_board(board, movement)
+      length(board) <= y                              -> check_final_tile(board, movement)
+    end
   end
 
   def travel(board, {x, y}) do
@@ -79,10 +91,18 @@ defmodule TobogganTrajectory do
     {:travel, new_board}
   end
 
-  def change_board(board = [row | _], horizontal_movement) do
-    initial_square = {horizontal_movement - length(row), length(board) - 1}
+  def change_board(board = [row | _], {x, y}) do
+    initial_square = {x - length(row), length(board) - y}
 
     {:change_board, initial_square}
+  end
+
+  def check_final_tile(board, {x, _}) do
+    final_row = board
+                |> List.last()
+                |> Enum.drop(x)
+
+    {:halt, [final_row]}
   end
 
   def new_tree_encounters(board, tree_encounters \\ 0) do
