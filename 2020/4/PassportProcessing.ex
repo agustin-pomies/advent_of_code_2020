@@ -38,10 +38,60 @@ defmodule PassportProcessing do
   end
 
   def valid_passport?(passport) do
-    Enum.all?(required_fields(), &(Map.has_key?(passport, &1)))
+    ecl_values = ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"]
+    hcl_format = ~r"^#[[:xdigit:]]{6}$"
+    pid_format = ~r"^[[:digit:]]{9}$"
+
+    required_keys = Enum.all?(required_fields(), &(Map.has_key?(passport, &1)))
+
+    if required_keys do
+      validations = %{
+        byr: Map.fetch(passport, "byr") |> elem(1) |> to_integer() |> check_range(1920, 2002),
+        iyr: Map.fetch(passport, "iyr") |> elem(1) |> to_integer() |> check_range(2010, 2020),
+        eyr: Map.fetch(passport, "eyr") |> elem(1) |> to_integer() |> check_range(2020, 2030),
+        hgt: Map.fetch(passport, "hgt") |> elem(1) |> parse_height() |> check_height(),
+        hcl: Map.fetch(passport, "hcl") |> elem(1) |> String.match?(hcl_format),
+        pid: Map.fetch(passport, "pid") |> elem(1) |> String.match?(pid_format),
+        ecl: Enum.member?(ecl_values, elem(Map.fetch(passport, "ecl"), 1))
+      }
+
+      validations
+      |> Map.values()
+      |> Enum.all?()
+    else
+      false
+    end
   end
 
   def required_fields do
     ["byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid"]
+  end
+
+  def check_range(number, min, max) do
+    min <= number && number <= max
+  end
+
+  def parse_height(height_string) do
+    regex = ~r"([[:digit:]]+)([[:alpha:]]+)"
+
+    case Regex.scan(regex, height_string) do
+      [head | tail] -> [head | tail] |> hd() |> tl()
+      [] -> [:error, :error]
+    end
+  end
+
+  def check_height([value, unit]) do
+    case unit do
+      "cm" -> to_integer(value) |> check_range(150, 193)
+      "in" -> to_integer(value) |> check_range(59, 76)
+      _ -> false
+    end
+  end
+
+  def to_integer(my_string) do
+    case Integer.parse(my_string) do
+      {number, _} -> number
+      :error -> "It didn't work"
+    end
   end
 end
