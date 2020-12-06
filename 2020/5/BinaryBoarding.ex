@@ -4,7 +4,8 @@ defmodule BinaryBoarding do
     |> Enum.map(&(String.graphemes(&1)))
     |> Enum.map(&(seat_code_to_binary(&1)))
     |> Enum.map(&(parse_seat_code(&1)))
-    |> Enum.max()
+    |> Enum.sort()
+    |> own_seat_code()
     |> show_output()
   end
 
@@ -36,6 +37,10 @@ defmodule BinaryBoarding do
 
   def seat_id(x, y) do
     x * 8 + y
+  end
+
+  def own_seat_code([first | [second | tail]]) do
+    if second == first + 1, do: own_seat_code([second | tail]), else: first + 1
   end
 
   def binary_to_decimal(n) do
