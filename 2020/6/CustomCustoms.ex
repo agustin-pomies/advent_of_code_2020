@@ -16,7 +16,7 @@ defmodule CustomCustoms do
 
   def parse_input(answers) do
     answers
-    |> Enum.map(&(String.split(&1, "\n")))
+    |> Enum.map(&(String.split(&1, "\n", trim: true)))
     |> Enum.map(fn group_answers -> Enum.map(group_answers, &(String.graphemes(&1))) end)
     |> Enum.map(fn group_answers -> Enum.map(group_answers, &(MapSet.new(&1))) end)
   end
@@ -27,7 +27,7 @@ defmodule CustomCustoms do
 
   def yes_answered_questions(group_answers) do
     group_answers
-    |> Enum.reduce(fn individual_answers, yes_answered_questions -> MapSet.union(individual_answers, yes_answered_questions) end)
+    |> Enum.reduce(fn individual_answers, yes_answered_questions -> MapSet.intersection(individual_answers, yes_answered_questions) end)
     |> MapSet.to_list()
     |> length()
   end
