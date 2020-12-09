@@ -1,13 +1,22 @@
 defmodule AdventOfCode2020 do
   def puzzles_names do
-    %{
-      1 => "Report Repair",
-      2 => "Password Philosophy",
-      3 => "Toboggan Trajectory",
-      4 => "Passport Processing",
-      5 => "Binary Boarding",
-      6 => "Custom Customs"
-    }
+    Path.join(["lib", "solvers", "*.ex"])
+    |> Path.wildcard()
+    |> Enum.map(&(Path.relative_to(&1, Path.join(["lib", "solvers"]))))
+    |> Enum.map(&(parse_file_name(&1)))
+    |> Enum.reduce(fn elem, acc -> Map.merge(elem, acc) end)
+  end
+
+  def parse_file_name(file_name) do
+    [day_number | terms] = file_name
+                           |> String.replace_suffix(".ex", "")
+                           |> String.split("_")
+
+    puzzle_name = terms
+                  |> Enum.map(&(Macro.camelize(&1)))
+                  |> Enum.join(" ")
+
+    %{ Helper.to_integer(day_number) => puzzle_name }
   end
 
   def solve do
