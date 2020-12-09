@@ -1,48 +1,47 @@
 defmodule PassportProcessing do
-  def solve do
-    get_input("input.txt")
-    |> parse_input()
-    |> Enum.filter(&(valid_passport?(&1)))
-    |> length()
-    |> show_output()
+  def get_data do
+    IOModule.get_input("4", "\n\n") |> parse_input()
   end
 
-  def get_input(file_name) do
-    case File.read(file_name) do
-      {:ok, file}      -> String.split(file, "\n\n", trim: true)
-      {:error, reason} -> reason
-    end
+  def part_one do
+    get_data() |> Enum.filter(&valid_passport_1?(&1)) |> length()
   end
 
-  def show_output(output) do
-    IO.puts("The answer is #{output}")
+  def part_two do
+    get_data() |> Enum.filter(&valid_passport_2?(&1)) |> length()
   end
 
   def parse_input(strings) do
     strings
-    |> Enum.map(&(String.replace(&1, "\n", " ")))
-    |> Enum.map(&(scan_with_regex(&1)))
+    |> Enum.map(&String.replace(&1, "\n", " "))
+    |> Enum.map(&scan_with_regex(&1))
   end
 
   def scan_with_regex(passport_string) do
     regex = ~r"([[:graph:]]+):([[:graph:]]+)"
 
     case Regex.scan(regex, passport_string) do
-      [head | tail] -> Enum.map([head | tail], &(Enum.drop(&1, 1))) |> build_map()
+      [head | tail] -> Enum.map([head | tail], &Enum.drop(&1, 1)) |> build_map()
       [] -> IO.puts(passport_string)
     end
   end
 
   def build_map(key_value_pairs) do
-    Enum.reduce(key_value_pairs, %{}, fn [key, value], passport -> Map.put(passport, key, value) end)
+    Enum.reduce(key_value_pairs, %{}, fn [key, value], passport ->
+      Map.put(passport, key, value)
+    end)
   end
 
-  def valid_passport?(passport) do
+  def valid_passport_1?(passport) do
+    Enum.all?(required_fields(), &Map.has_key?(passport, &1))
+  end
+
+  def valid_passport_2?(passport) do
     ecl_values = ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"]
     hcl_format = ~r"^#[[:xdigit:]]{6}$"
     pid_format = ~r"^[[:digit:]]{9}$"
 
-    required_keys = Enum.all?(required_fields(), &(Map.has_key?(passport, &1)))
+    required_keys = Enum.all?(required_fields(), &Map.has_key?(passport, &1))
 
     if required_keys do
       validations = %{

@@ -1,12 +1,10 @@
 defmodule IOModule do
-  def get_input(number) do
-    case File.read("inputs/" <> number <> ".txt") do
-      {:ok, file}      -> String.split(file, "\n", trim: true)
+  def get_input(number, separator \\ "\n") do
+    input_path = Path.join(["inputs", "puzzles", number <> ".txt"])
+
+    case File.read(input_path) do
+      {:ok, file} -> String.split(file, separator, trim: true)
       {:error, reason} -> reason
     end
-  end
-
-  def show_output(output) do
-    IO.puts("The answer is #{output}")
   end
 end
