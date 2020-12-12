@@ -11,7 +11,18 @@ defmodule HandyHaversacks do
   end
 
   def part_two do
-    0
+    g = get_data() |> build_graph()
+    reachable_vertices = Graph.reachable(g, [color_bag()])
+
+    Graph.subgraph(g, reachable_vertices)
+    |> travel_graph(color_bag())
+    |> Kernel.-(1)
+  end
+
+  def travel_graph(g, vertex) do
+    Graph.out_edges(g, vertex)
+    |> Enum.map(&(Map.take(&1, [:v2, :weight])))
+    |> Enum.reduce(1, fn %{v2: color_bag, weight: weight}, acc -> acc + weight * travel_graph(g, color_bag) end)
   end
 
   def parse_input(sentences) do
