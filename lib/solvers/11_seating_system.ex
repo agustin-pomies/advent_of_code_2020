@@ -5,14 +5,18 @@ defmodule SeatingSystem do
 
   def part_one do
     get_data()
-    |> reach_stable_configuration()
+    |> reach_stable_configuration(&consecutive_seats/2)
     |> Map.values()
     |> Enum.filter(&(&1 == :busy))
     |> length()
   end
 
   def part_two do
-    0
+    get_data()
+    |> reach_stable_configuration(&change_state_using_visible_seats/2)
+    |> Map.values()
+    |> Enum.filter(&(&1 == :busy))
+    |> length()
   end
 
   def parse_board(rows) do
@@ -46,22 +50,22 @@ defmodule SeatingSystem do
     %{"." => :floor, "L" => :empty, "#" => :busy}
   end
 
-  def reach_stable_configuration({board, _dimensions} = metaboard) do
-    new_metaboard = new_generation(metaboard)
+  def reach_stable_configuration({board, _dimensions} = metaboard, new_seat) do
+    new_metaboard = new_generation(metaboard, new_seat)
     {new_board, _dimensions} = new_metaboard 
 
-    if Map.equal?(board, new_board), do: board, else: reach_stable_configuration(new_metaboard)
+    if Map.equal?(board, new_board), do: board, else: reach_stable_configuration(new_metaboard, new_seat)
   end
 
-  def new_generation({board, dimensions} = metaboard) do
+  def new_generation({board, dimensions} = metaboard, new_seat) do
     new_board =
-      Enum.map(board, fn {coord, seat_state} -> {coord, new_seat(metaboard, {coord, seat_state})} end)
+      Enum.map(board, fn {coord, seat_state} -> {coord, new_seat.(metaboard, {coord, seat_state})} end)
       |> Map.new
 
     {new_board, dimensions}
   end
 
-  def new_seat(metaboard, {coord, seat_state}) do
+  def consecutive_seats(metaboard, {coord, seat_state}) do
     case seat_state do
       :floor  -> :floor
       :empty  -> if neighbors(metaboard, coord) |> Enum.all?(fn elem -> elem != :busy end), do: :busy, else: :empty
@@ -69,10 +73,41 @@ defmodule SeatingSystem do
     end
   end
 
+  def change_state_using_visible_seats(metaboard, {coord, seat_state}) do
+    case seat_state do
+      :floor  -> :floor
+      :empty  -> if visible_seats(metaboard, coord) |> Enum.all?(fn elem -> elem != :busy end), do: :busy, else: :empty
+      :busy   -> if visible_seats(metaboard, coord) |> Enum.filter(&(&1 == :busy)) |> length() |> Kernel.>=(5), do: :empty, else: :busy
+    end
+  end
+
   def neighbors({board, dimensions}, {a, b}) do
-    coordinates = for x <- a-1..a+1, y <- b-1..b+1, x != a || y != b, x >= 0 && x < elem(dimensions, 0), y >= 0 && y < elem(dimensions, 1), do: {x, y}
+    coordinates = for x <- a-1..a+1, y <- b-1..b+1, x != a || y != b, in_range({x, y}, dimensions), do: {x, y}
 
     Enum.map(coordinates, fn coord -> Map.fetch!(board, coord) end)
+  end
+
+  def visible_seats(metaboard, origin) do
+    directions = for x <- -1..1, y <- -1..1, x != 0 || y != 0, do: {x, y}
+
+    Enum.map(directions, fn direction -> travel_while(metaboard, origin, direction) end)
+  end
+
+  def travel_while({board, dimensions} = metaboard, {a, b}, {c, d} = movement) do
+    new_coordinates = {a + c, b + d}
+
+    if in_range(new_coordinates, dimensions) do
+      case Map.fetch!(board, new_coordinates) do
+        :floor      -> travel_while(metaboard, new_coordinates, movement)
+        seat_state  -> seat_state
+      end
+    else
+      :floor
+    end
+  end
+
+  def in_range({x, y}, {max_x, max_y}) do
+    (0 <= x && x < max_x) && 0 <= y && y < max_y
   end
 
   # Debugging tools
