@@ -22,7 +22,8 @@ defmodule AdventOfCode2020.MixProject do
   defp deps do
     [
       {:libgraph, "~> 0.7"},
-      {:memoize, "~> 1.3"}
+      {:memoize, "~> 1.3"},
+      {:chunky, "~> 0.13.0"}
     ]
   end
 end
