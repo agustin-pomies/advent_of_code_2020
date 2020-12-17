@@ -63,6 +63,57 @@ defmodule TicketTranslation do
   end
 
   def part_two do
-    0
+    # Data Parsing
+    data = get_data()
+    field_rules = Map.fetch!(data, :field_rules)
+    nearby_tickets = Map.fetch!(data, :nearby_tickets)
+    my_ticket = Map.fetch!(data, :my_ticket)
+
+    # Valid Tickets
+    tickets_validation =
+      nearby_tickets
+      |> Enum.map(&(valid_ticket?(&1, field_rules)))
+      |> Enum.map(&(elem(&1, 0)))
+
+    valid_tickets =
+      Enum.zip(nearby_tickets, tickets_validation)
+      |> Enum.filter(fn {_, valid} -> valid end)
+      |> Enum.map(&(elem(&1, 0)))
+    
+    # Fields Deduction
+    values_by_index =
+      valid_tickets
+      |> Enum.map(&(Enum.with_index(&1)))
+      |> Enum.concat()
+      |> Enum.group_by(&(elem(&1, 1)), &(elem(&1, 0)))
+
+    deduce_fields(Map.to_list(values_by_index), Map.to_list(field_rules), field_rules, %{})
+    |> Enum.filter(fn {field_name, _index} -> String.contains?(field_name, "departure") end)
+    |> Enum.map(&(elem(&1, 1)))
+    |> Enum.map(&(Enum.at(my_ticket, &1)))
+    |> Enum.reduce(fn elem, acc -> elem * acc end)
+  end
+
+  def deduce_fields([], [], %{}, assigned_fields), do: assigned_fields
+  def deduce_fields(_, [], not_assigned_fields, _) when not_assigned_fields != %{}, do: :backtrace
+  def deduce_fields(columns, field_rules, not_assigned_fields, assigned_fields) do
+    [{index, values_to_match} | values] = columns
+    [{field_name, rule} | rules] = field_rules
+
+    if is_candidate_rule?(values_to_match, rule) do
+      updated_not_assigned_fields = Map.delete(not_assigned_fields, field_name)
+      updated_assigned_fields = Map.put(assigned_fields, field_name, index)
+
+      case deduce_fields(values, updated_not_assigned_fields |> Map.to_list, updated_not_assigned_fields, updated_assigned_fields) do
+        :backtrace      -> deduce_fields(columns, rules, not_assigned_fields, assigned_fields)
+        field_deduction -> field_deduction
+      end
+    else
+      deduce_fields(columns, rules, not_assigned_fields, assigned_fields)
+    end
+  end
+
+  def is_candidate_rule?(values_to_match, rule) do
+    Enum.all?(values_to_match, &(match_rule?(&1, rule)))
   end
 end
