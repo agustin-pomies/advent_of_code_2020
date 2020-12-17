@@ -15,24 +15,27 @@ defmodule RambunctiousRecitation do
       Enum.zip(numbers, 1..length(numbers))
       |> Enum.reduce(%{}, fn {number, index}, acc -> Map.merge(acc, %{number => {nil, index}}) end)
   
-    continue_sequence(last_number_spoken, last_step, last_appeareances)
+    continue_sequence(last_number_spoken, last_step, last_appeareances, 2020)
   end
 
-  def continue_sequence(last_number_spoken, 2020, _), do: last_number_spoken
-  def continue_sequence(last_number_spoken, last_step, last_appeareances) do
-    if !first_time_spoken?(last_appeareances, last_number_spoken) do
-      {penultimate, last} = Map.fetch!(last_appeareances, last_number_spoken)
-      number_to_be_spoken = last - penultimate
-
-      next_step = last_step + 1
-      new_appeareances = Map.put(last_appeareances, number_to_be_spoken, {previous_appeareance(last_appeareances, number_to_be_spoken), next_step})
-      continue_sequence(number_to_be_spoken, next_step, new_appeareances)
+  def continue_sequence(last_number_spoken, last_step, last_appeareances, stop) do
+    if last_step == stop do
+      last_number_spoken
     else
-      number_to_be_spoken = 0
-
-      next_step = last_step + 1
-      new_appeareances = Map.put(last_appeareances, number_to_be_spoken, {previous_appeareance(last_appeareances, number_to_be_spoken), next_step})
-      continue_sequence(number_to_be_spoken, next_step, new_appeareances)
+      if !first_time_spoken?(last_appeareances, last_number_spoken) do
+        {penultimate, last} = Map.fetch!(last_appeareances, last_number_spoken)
+        number_to_be_spoken = last - penultimate
+  
+        next_step = last_step + 1
+        new_appeareances = Map.put(last_appeareances, number_to_be_spoken, {previous_appeareance(last_appeareances, number_to_be_spoken), next_step})
+        continue_sequence(number_to_be_spoken, next_step, new_appeareances, stop)
+      else
+        number_to_be_spoken = 0
+  
+        next_step = last_step + 1
+        new_appeareances = Map.put(last_appeareances, number_to_be_spoken, {previous_appeareance(last_appeareances, number_to_be_spoken), next_step})
+        continue_sequence(number_to_be_spoken, next_step, new_appeareances, stop)
+      end
     end
   end
 
@@ -50,8 +53,14 @@ defmodule RambunctiousRecitation do
   end
 
   def part_two do
-    get_data()
+    numbers = get_data()
 
-    0
+    last_number_spoken = List.last(numbers)
+    last_step = length(numbers)
+    last_appeareances =
+      Enum.zip(numbers, 1..length(numbers))
+      |> Enum.reduce(%{}, fn {number, index}, acc -> Map.merge(acc, %{number => {nil, index}}) end)
+  
+    continue_sequence(last_number_spoken, last_step, last_appeareances, 30000000)
   end
 end
