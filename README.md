@@ -1,6 +1,11 @@
 # AdventOfCode2020
 
-**TODO: Add description**
+## Running Script
+
+```bash
+mix compile
+mix run -e "AdventOfCode2020.solve()"
+```
 
 ## Installation
 

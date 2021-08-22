@@ -46,9 +46,18 @@ defmodule AdventOfCode2020 do
   end
 
   def display_puzzle(day_number, puzzle_name, module) do
+    args = System.argv()
+
     IO.puts("Day #{day_number}: #{puzzle_name}")
-    IO.puts("Part One - #{module.part_one()}")
-    IO.puts("Part Two - #{module.part_two()}")
+
+    if Enum.empty?(args) || Enum.member?(args, "1") do
+      IO.puts("Part One - #{module.part_one()}")
+    end
+
+    if Enum.empty?(args) || Enum.member?(args, "2") do
+      IO.puts("Part Two - #{module.part_two()}")
+    end
+
     IO.puts("---------------------------------")
   end
 
