@@ -23,7 +23,8 @@ defmodule AdventOfCode2020.MixProject do
     [
       {:libgraph, "~> 0.7"},
       {:memoize, "~> 1.3"},
-      {:chunky, "~> 0.13.0"}
+      {:chunky, "~> 0.13.0"},
+      {:mock, "~> 0.3.0", only: :test}
     ]
   end
 end
