@@ -1,39 +1,39 @@
 defmodule ReportRepair do
+  @no_day "1"
+
+  @checksum 2020
+  @couple 2
+  @triple 3
+
   def get_data do
-    IOModule.get_input("1") |> Enum.map(&Helper.to_integer(&1))
+    IOModule.get_input(@no_day)
+    |> Enum.map(&String.to_integer(&1))
   end
 
   def part_one do
     get_data()
-    |> combinations_1()
+    |> combinations(@couple)
     |> check_sum()
-    |> elem(1)
-    |> Enum.reduce(1, fn x, acc -> x * acc end)
+    |> final_answer()
   end
 
   def part_two do
     get_data()
-    |> combinations_2()
+    |> combinations(@triple)
     |> check_sum()
-    |> elem(1)
-    |> Enum.reduce(1, fn x, acc -> x * acc end)
+    |> final_answer()
   end
 
-  defp combinations_1(collection) do
-    for x <- collection, y <- collection, x != y, do: [x, y]
+  defp combinations(_, 0), do: [[]]
+  defp combinations([], _), do: []
+  defp combinations([h|t], m) do
+    (for l <- combinations(t, m-1), do: [h|l]) ++ combinations(t, m)
   end
 
-  defp combinations_2(collection) do
-    for x <- collection, y <- collection, z <- collection, x != y && y != z && x != z, do: [x, y, z]
+  defp check_sum([]), do: nil
+  defp check_sum([h|t]) do
+    if Enum.reduce(h, 0, &+/2) == @checksum, do: h, else: check_sum(t)
   end
 
-  defp check_sum([head | tail]) do
-    if Enum.reduce(head, 0, fn x, acc -> x + acc end) == 2020,
-      do: {:ok, head},
-      else: check_sum(tail)
-  end
-
-  defp check_sum([]) do
-    {:error, "No matching entries were found"}
-  end
+  def final_answer(collection), do: Enum.reduce(collection, 1, &*/2)
 end
