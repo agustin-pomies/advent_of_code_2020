@@ -1,6 +1,6 @@
 defmodule TicketTranslation do
   def get_data do
-    [field_rules_string, my_ticket_string, nearby_tickets_string | _] = IOModule.get_input("16", "\n\n")
+    [field_rules_string, my_ticket_string, nearby_tickets_string | _] = IOModule.get_input(16, "\n\n")
 
     field_rules =
       field_rules_string

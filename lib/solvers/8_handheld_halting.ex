@@ -1,6 +1,6 @@
 defmodule HandheldHalting do
   def get_data do
-    IOModule.get_input("8") |> parse_input()
+    IOModule.get_input(8) |> parse_input()
   end
 
   def part_one() do

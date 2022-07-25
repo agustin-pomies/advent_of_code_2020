@@ -1,6 +1,6 @@
 defmodule DockingData do
   def get_data do
-    IOModule.get_input("14")
+    IOModule.get_input(14)
     |> Enum.map(&(parse_instruction(&1)))
   end
 
@@ -81,7 +81,7 @@ defmodule DockingData do
   end
 
   def get_data_2 do
-    IOModule.get_input("14")
+    IOModule.get_input(14)
     |> Enum.map(&(parse_instruction_2(&1)))
   end
 

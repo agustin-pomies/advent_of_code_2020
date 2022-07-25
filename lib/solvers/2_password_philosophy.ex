@@ -1,6 +1,6 @@
 defmodule PasswordPhilosophy do
   def get_data do
-    IOModule.get_input("2")
+    IOModule.get_input(2)
   end
 
   def part_one do

@@ -1,6 +1,6 @@
 defmodule CustomCustoms do
   def get_data do
-    IOModule.get_input("6", "\n\n") |> parse_input()
+    IOModule.get_input(6, "\n\n") |> parse_input()
   end
 
   def part_one do

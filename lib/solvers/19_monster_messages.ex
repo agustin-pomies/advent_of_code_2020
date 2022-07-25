@@ -1,7 +1,7 @@
 defmodule MonsterMessages do
   def get_data do
     [rules, messages] =
-      IOModule.get_input("19", "\n\n")
+      IOModule.get_input(19, "\n\n")
       |> Enum.map(&(String.split(&1, "\n", trim: true)))
 
     parsed_rules =

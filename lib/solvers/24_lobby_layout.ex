@@ -1,6 +1,6 @@
 defmodule LobbyLayout do
   def get_data do
-    IOModule.get_input("24", "\r\n")
+    IOModule.get_input(24, "\r\n")
     |> Enum.map(&(parse_line(&1)))
   end
 

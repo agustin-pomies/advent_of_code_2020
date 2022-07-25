@@ -1,6 +1,6 @@
 defmodule ConwayCubes do
   def get_data do
-    IOModule.get_input("17", "\n") |> parse_board()
+    IOModule.get_input(17, "\n") |> parse_board()
   end
 
   def parse_board(rows) do

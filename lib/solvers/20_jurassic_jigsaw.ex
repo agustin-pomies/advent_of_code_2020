@@ -1,6 +1,6 @@
 defmodule JurassicJigsaw do
   def get_data do
-    IOModule.get_input("20", "\n\n")
+    IOModule.get_input(20, "\n\n")
     |> Enum.map(&(parse_tile(&1)))
     |> Enum.into(%{})
   end

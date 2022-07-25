@@ -1,6 +1,6 @@
 defmodule EncodingError do
   def get_data do
-    IOModule.get_input("9") |> Enum.map(&(Helper.to_integer(&1)))
+    IOModule.get_input(9) |> Enum.map(&(Helper.to_integer(&1)))
   end
 
   def part_one() do

@@ -1,6 +1,6 @@
 defmodule SeatingSystem do
   def get_data do
-    IOModule.get_input("11") |> parse_board()
+    IOModule.get_input(11) |> parse_board()
   end
 
   def part_one do

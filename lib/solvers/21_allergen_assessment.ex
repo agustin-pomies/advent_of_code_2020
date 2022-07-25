@@ -1,6 +1,6 @@
 defmodule AllergenAssessment do
   def get_data do
-    IOModule.get_input("21", "\r\n")
+    IOModule.get_input(21, "\r\n")
     |> Enum.map(&parse_food(&1))
   end
 

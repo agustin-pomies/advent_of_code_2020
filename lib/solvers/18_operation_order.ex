@@ -1,6 +1,6 @@
 defmodule OperationOrder do
   def get_data do
-    IOModule.get_input("18")
+    IOModule.get_input(18)
     |> Enum.map(&(String.replace(&1, ["(", ")"], fn char -> " " <> char <> " " end)))
     |> Enum.map(&(String.split(&1, " ", trim: true)))
   end

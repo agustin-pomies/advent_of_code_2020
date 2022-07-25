@@ -8,7 +8,7 @@ defmodule TobogganTrajectory do
   end
 
   def get_data do
-    IOModule.get_input("3") |> parse_board()
+    IOModule.get_input(3) |> parse_board()
   end
 
   def part_one do

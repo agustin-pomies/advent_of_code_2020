@@ -1,6 +1,6 @@
 defmodule RambunctiousRecitation do
   def get_data do
-    IOModule.get_input("15")
+    IOModule.get_input(15)
     |> hd()
     |> String.split(",")
     |> Enum.map(&(Helper.to_integer(&1)))

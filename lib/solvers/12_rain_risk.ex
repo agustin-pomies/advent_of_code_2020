@@ -1,6 +1,6 @@
 defmodule RainRisk do
   def get_data do
-    IOModule.get_input("12") |> parse_instructions()
+    IOModule.get_input(12) |> parse_instructions()
   end
 
   def part_one do

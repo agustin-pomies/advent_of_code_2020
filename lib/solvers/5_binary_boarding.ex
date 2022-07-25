@@ -1,6 +1,6 @@
 defmodule BinaryBoarding do
   def get_data do
-    IOModule.get_input("5")
+    IOModule.get_input(5)
     |> Enum.map(&String.graphemes(&1))
     |> Enum.map(&seat_code_to_binary(&1))
     |> Enum.map(&parse_seat_code(&1))

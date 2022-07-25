@@ -1,5 +1,5 @@
 defmodule ReportRepair do
-  @no_day "1"
+  @no_day 1
 
   @checksum 2020
   @couple 2

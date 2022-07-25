@@ -3,7 +3,7 @@ defmodule ComboBreaker do
   @initial_subject_number 7
 
   def get_data do
-    IOModule.get_input("25", "\r\n")
+    IOModule.get_input(25, "\r\n")
     |> Enum.map(&String.to_integer/1)
   end
 

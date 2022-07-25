@@ -1,6 +1,6 @@
 defmodule CrabCombat do
   def get_data do
-    lines = IOModule.get_input("22", "\r\n")
+    lines = IOModule.get_input(22, "\r\n")
 
     [deck_1, deck_2 | _] = 
       Enum.split(lines, div(length(lines), 2))

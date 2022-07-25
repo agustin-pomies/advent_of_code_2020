@@ -8,7 +8,7 @@ defmodule CrabCups do
   @total_cups_2 1_000_000
 
   def get_data do
-    IOModule.get_input("23", "\r\n")
+    IOModule.get_input(23, "\r\n")
     |> hd()
     |> String.graphemes()
     |> Enum.map(&(Helper.to_integer(&1)))

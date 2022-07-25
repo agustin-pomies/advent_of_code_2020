@@ -1,6 +1,6 @@
 defmodule ShuttleSearch do
   def get_data do
-    data = IOModule.get_input("13")
+    data = IOModule.get_input(13)
     estimated_departure_time = hd(data) |> Helper.to_integer()
     bus_frequencies =
       List.last(data)
@@ -12,7 +12,7 @@ defmodule ShuttleSearch do
   end
 
   def get_data_2 do
-    data = IOModule.get_input("13")
+    data = IOModule.get_input(13)
     |> List.last()
     |> String.split(",")
     
