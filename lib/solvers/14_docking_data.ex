@@ -1,12 +1,12 @@
 defmodule DockingData do
   def get_data do
     IOModule.get_input(14)
-    |> Enum.map(&(parse_instruction(&1)))
+    |> Enum.map(&parse_instruction(&1))
   end
 
   def parse_instruction(line) do
     line_information = line |> String.split(" = ") |> List.to_tuple()
-    
+
     if elem(line_information, 0) == "mask" do
       {:mask, elem(line_information, 1) |> parse_mask()}
     else
@@ -20,7 +20,7 @@ defmodule DockingData do
 
   def parse_mask(string_mask) do
     mask_list = string_mask |> String.graphemes()
-    
+
     Enum.zip(0..length(mask_list), mask_list)
     |> Enum.filter(fn {_key, char} -> char != "X" end)
     |> Map.new()
@@ -51,22 +51,30 @@ defmodule DockingData do
   end
 
   def run_program([], _, memory), do: memory
+
   def run_program([instruction | initialization_instructions], mask, memory) do
     case elem(instruction, 0) do
-      :mask     -> run_program(initialization_instructions, elem(instruction, 1), memory)
-      :memory   -> run_program(initialization_instructions, mask, execute_memory_allocation(instruction, mask, memory))
+      :mask ->
+        run_program(initialization_instructions, elem(instruction, 1), memory)
+
+      :memory ->
+        run_program(
+          initialization_instructions,
+          mask,
+          execute_memory_allocation(instruction, mask, memory)
+        )
     end
   end
 
   def execute_memory_allocation({_, memory_address, value}, mask, memory) do
-    masked_value = mask_value(mask, value) 
+    masked_value = mask_value(mask, value)
 
     Map.put(memory, memory_address, masked_value)
   end
 
   def mask_value(mask, value) do
     value_list = String.graphemes(value)
-    
+
     Enum.reduce(mask, value_list, fn {index, char}, acc -> List.replace_at(acc, index, char) end)
     |> Enum.join("")
     |> Integer.parse(2)
@@ -82,12 +90,12 @@ defmodule DockingData do
 
   def get_data_2 do
     IOModule.get_input(14)
-    |> Enum.map(&(parse_instruction_2(&1)))
+    |> Enum.map(&parse_instruction_2(&1))
   end
 
   def parse_instruction_2(line) do
     line_information = line |> String.split(" = ") |> List.to_tuple()
-    
+
     if elem(line_information, 0) == "mask" do
       {:mask, elem(line_information, 1) |> parse_mask_2()}
     else
@@ -101,17 +109,25 @@ defmodule DockingData do
 
   def parse_mask_2(string_mask) do
     mask_list = string_mask |> String.graphemes()
-    
+
     Enum.zip(0..length(mask_list), mask_list)
     |> Enum.filter(fn {_key, char} -> char != "0" end)
     |> Map.new()
   end
 
   def run_program_2([], _, memory), do: memory
+
   def run_program_2([instruction | initialization_instructions], mask, memory) do
     case elem(instruction, 0) do
-      :mask     -> run_program_2(initialization_instructions, elem(instruction, 1), memory)
-      :memory   -> run_program_2(initialization_instructions, mask, execute_memory_allocation_2(instruction, mask, memory))
+      :mask ->
+        run_program_2(initialization_instructions, elem(instruction, 1), memory)
+
+      :memory ->
+        run_program_2(
+          initialization_instructions,
+          mask,
+          execute_memory_allocation_2(instruction, mask, memory)
+        )
     end
   end
 
@@ -125,8 +141,10 @@ defmodule DockingData do
       Integer.to_string(memory_address, 2)
       |> String.pad_leading(36, "0")
       |> String.graphemes()
-    
-    Enum.reduce(mask, memory_address_list, fn {index, char}, acc -> List.replace_at(acc, index, char) end)
+
+    Enum.reduce(mask, memory_address_list, fn {index, char}, acc ->
+      List.replace_at(acc, index, char)
+    end)
     |> generate_addresses([])
   end
 
@@ -135,7 +153,7 @@ defmodule DockingData do
   def generate_addresses([head | tail], []) do
     case head do
       "X" -> generate_addresses(tail, [["0"], ["1"]])
-      _   -> generate_addresses(tail, [[head]])
+      _ -> generate_addresses(tail, [[head]])
     end
   end
 
@@ -148,6 +166,6 @@ defmodule DockingData do
   end
 
   def auxiliar(collection, char) do
-    Enum.map(collection, &(List.insert_at(&1, -1, char)))
+    Enum.map(collection, &List.insert_at(&1, -1, char))
   end
 end

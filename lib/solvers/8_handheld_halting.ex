@@ -15,7 +15,10 @@ defmodule HandheldHalting do
     1..length(data)
     |> Stream.zip(data)
     |> Enum.into(%{})
-    |> Enum.map(fn {k, v} -> [instruction, change] = String.split(v, " "); {k, {String.to_atom(instruction), Helper.to_integer(change)}} end)
+    |> Enum.map(fn {k, v} ->
+      [instruction, change] = String.split(v, " ")
+      {k, {String.to_atom(instruction), Helper.to_integer(change)}}
+    end)
     |> Enum.into(%{})
   end
 
@@ -23,10 +26,10 @@ defmodule HandheldHalting do
     {instruction, new_program} = Map.pop(program, line_number)
 
     case instruction do
-      {:nop, _value}  -> run(new_program, acc, line_number + 1)
-      {:acc, value}   -> run(new_program, acc + value, line_number + 1)
-      {:jmp, offset}  -> run(new_program, acc, line_number + offset)
-      _               -> {line_number, acc}
+      {:nop, _value} -> run(new_program, acc, line_number + 1)
+      {:acc, value} -> run(new_program, acc + value, line_number + 1)
+      {:jmp, offset} -> run(new_program, acc, line_number + offset)
+      _ -> {line_number, acc}
     end
   end
 
@@ -34,17 +37,17 @@ defmodule HandheldHalting do
     {instruction, new_program} = Map.pop(program, line_number)
 
     case instruction do
-      {:nop, _value}  -> run_alternatives(new_program, acc, line_number + 1)
-      {:acc, value}   -> run_alternatives(new_program, acc + value, line_number + 1)
-      {:jmp, offset}  -> run_alternatives(new_program, acc, line_number + offset)
-      _               -> {line_number, acc}
+      {:nop, _value} -> run_alternatives(new_program, acc, line_number + 1)
+      {:acc, value} -> run_alternatives(new_program, acc + value, line_number + 1)
+      {:jmp, offset} -> run_alternatives(new_program, acc, line_number + offset)
+      _ -> {line_number, acc}
     end
   end
 
   def run_alternatives(program, acc, line_number) do
     case Map.fetch(program, line_number) do
-      {:ok, _instruction}   -> auxiliar(program, acc, line_number)
-      :error                -> {line_number, acc}
+      {:ok, _instruction} -> auxiliar(program, acc, line_number)
+      :error -> {line_number, acc}
     end
   end
 
@@ -62,16 +65,16 @@ defmodule HandheldHalting do
   end
 
   def choose_program(collection) do
-    Enum.max_by(collection, &(elem(&1, 0)))
+    Enum.max_by(collection, &elem(&1, 0))
   end
 
   def change_instruction(program, line_number) do
     instruction = Map.fetch!(program, line_number)
 
     case instruction do
-      {:nop, value}   -> Map.put(program, line_number, {:jmp, value})
-      {:jmp, offset}  -> Map.put(program, line_number, {:nop, offset})
-      _               -> nil
+      {:nop, value} -> Map.put(program, line_number, {:jmp, value})
+      {:jmp, offset} -> Map.put(program, line_number, {:nop, offset})
+      _ -> nil
     end
   end
 end

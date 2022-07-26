@@ -1,6 +1,6 @@
 defmodule EncodingError do
   def get_data do
-    IOModule.get_input(9) |> Enum.map(&(Helper.to_integer(&1)))
+    IOModule.get_input(9) |> Enum.map(&Helper.to_integer(&1))
   end
 
   def part_one() do
@@ -30,23 +30,23 @@ defmodule EncodingError do
   def check_sum(collection, number) do
     combinations(collection) |> Enum.any?(fn {a, b} -> a + b == number end)
   end
-  
+
   def combinations(collection) do
     for x <- collection, y <- collection, x != y, do: {x, y}
   end
 
   def find_consecutive_list(collection, number) do
     case build_sublist(collection, [], number) do
-      nil   -> Enum.drop(collection, 1) |> find_consecutive_list(number)
-      list  -> list 
+      nil -> Enum.drop(collection, 1) |> find_consecutive_list(number)
+      list -> list
     end
   end
 
   def build_sublist([element | tail], accumulator, number) do
     cond do
-      number < 0  -> nil
+      number < 0 -> nil
       number == 0 -> accumulator
-      number > 0  -> build_sublist(tail, [element | accumulator], number - element)
+      number > 0 -> build_sublist(tail, [element | accumulator], number - element)
     end
   end
 end

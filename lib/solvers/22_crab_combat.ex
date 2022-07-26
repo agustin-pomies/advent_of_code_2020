@@ -2,11 +2,11 @@ defmodule CrabCombat do
   def get_data do
     lines = IOModule.get_input(22, "\r\n")
 
-    [deck_1, deck_2 | _] = 
+    [deck_1, deck_2 | _] =
       Enum.split(lines, div(length(lines), 2))
       |> Tuple.to_list()
-      |> Enum.map(&(Enum.drop(&1, 1)))
-      |> Enum.map(fn deck -> Enum.map(deck, &(Helper.to_integer(&1))) end)
+      |> Enum.map(&Enum.drop(&1, 1))
+      |> Enum.map(fn deck -> Enum.map(deck, &Helper.to_integer(&1)) end)
 
     {deck_1, deck_2}
   end
@@ -19,9 +19,9 @@ defmodule CrabCombat do
 
   def advance_round({deck_1, deck_2}) do
     cond do
-      deck_1 == []  -> deck_2
-      deck_2 == []  -> deck_1
-      true          -> round_result({deck_1, deck_2}) |> advance_round()
+      deck_1 == [] -> deck_2
+      deck_2 == [] -> deck_1
+      true -> round_result({deck_1, deck_2}) |> advance_round()
     end
   end
 
@@ -36,13 +36,13 @@ defmodule CrabCombat do
   def winning_score(winning_deck) do
     multipliers = Enum.to_list(length(winning_deck)..1)
 
-    Enum.zip_reduce(winning_deck, multipliers, 0, fn x, y, acc -> (x * y) + acc end)
+    Enum.zip_reduce(winning_deck, multipliers, 0, fn x, y, acc -> x * y + acc end)
   end
 
   def part_two do
     {:ok, file} = File.open("output.txt", [:append])
 
-    score = 
+    score =
       __MODULE__.get_data()
       |> recursive_combat_game({1, 1})
       |> winning_score()
@@ -55,10 +55,29 @@ defmodule CrabCombat do
 
   def recursive_combat_game({deck_1, deck_2}, {game, round}) do
     cond do
-      deck_1 == []                          -> deck_2
-      deck_2 == []                          -> deck_1
-      normal_round?({deck_1, deck_2})       -> print_round(game, round, {deck_1, deck_2}) |> recursive_combat_round_new_state(hd(deck_1) > hd(deck_2), {game, round}) |> recursive_combat_game({game, round + 1})
-      true                                  -> print_round(game, round, {deck_1, deck_2}) |> starting_subgame(game + 1) |> recursive_combat_round_new_state(subgame({deck_1 |> tl() |> Enum.take(hd(deck_1)), deck_2 |> tl() |> Enum.take(hd(deck_2))}, [], {game + 1, 1}), {game, round}) |> recursive_combat_game({game, round + 1})
+      deck_1 == [] ->
+        deck_2
+
+      deck_2 == [] ->
+        deck_1
+
+      normal_round?({deck_1, deck_2}) ->
+        print_round(game, round, {deck_1, deck_2})
+        |> recursive_combat_round_new_state(hd(deck_1) > hd(deck_2), {game, round})
+        |> recursive_combat_game({game, round + 1})
+
+      true ->
+        print_round(game, round, {deck_1, deck_2})
+        |> starting_subgame(game + 1)
+        |> recursive_combat_round_new_state(
+          subgame(
+            {deck_1 |> tl() |> Enum.take(hd(deck_1)), deck_2 |> tl() |> Enum.take(hd(deck_2))},
+            [],
+            {game + 1, 1}
+          ),
+          {game, round}
+        )
+        |> recursive_combat_game({game, round + 1})
     end
   end
 
@@ -66,7 +85,11 @@ defmodule CrabCombat do
     hd(deck_1) >= length(deck_1) or hd(deck_2) >= length(deck_2)
   end
 
-  def recursive_combat_round_new_state({[card_1 | deck_1], [card_2 | deck_2]}, result, {game, round}) do
+  def recursive_combat_round_new_state(
+        {[card_1 | deck_1], [card_2 | deck_2]},
+        result,
+        {game, round}
+      ) do
     if result do
       print_round_result(game, round, 1)
 
@@ -80,11 +103,33 @@ defmodule CrabCombat do
 
   def subgame({subdeck_1, subdeck_2}, configurations, {game, round}) do
     cond do
-      subdeck_1 == []                           -> ending_subgame(false, game, 2)
-      subdeck_2 == []                           -> ending_subgame(true, game, 1)
-      {subdeck_1, subdeck_2} in configurations  -> ending_subgame(true, game, 1)
-      normal_round?({subdeck_1, subdeck_2})     -> print_round(game, round, {subdeck_1, subdeck_2}) |> recursive_combat_round_new_state(hd(subdeck_1) > hd(subdeck_2), {game, round}) |> subgame([{subdeck_1, subdeck_2} | configurations], {game, round + 1})
-      true                                      -> print_round(game, round, {subdeck_1, subdeck_2}) |> starting_subgame(game + 1) |> recursive_combat_round_new_state(subgame({subdeck_1 |> tl() |> Enum.take(hd(subdeck_1)), subdeck_2 |> tl() |> Enum.take(hd(subdeck_2))}, [], {game + 1, 1}), {game, round}) |> subgame([{subdeck_1, subdeck_2} | configurations], {game, round + 1})
+      subdeck_1 == [] ->
+        ending_subgame(false, game, 2)
+
+      subdeck_2 == [] ->
+        ending_subgame(true, game, 1)
+
+      {subdeck_1, subdeck_2} in configurations ->
+        ending_subgame(true, game, 1)
+
+      normal_round?({subdeck_1, subdeck_2}) ->
+        print_round(game, round, {subdeck_1, subdeck_2})
+        |> recursive_combat_round_new_state(hd(subdeck_1) > hd(subdeck_2), {game, round})
+        |> subgame([{subdeck_1, subdeck_2} | configurations], {game, round + 1})
+
+      true ->
+        print_round(game, round, {subdeck_1, subdeck_2})
+        |> starting_subgame(game + 1)
+        |> recursive_combat_round_new_state(
+          subgame(
+            {subdeck_1 |> tl() |> Enum.take(hd(subdeck_1)),
+             subdeck_2 |> tl() |> Enum.take(hd(subdeck_2))},
+            [],
+            {game + 1, 1}
+          ),
+          {game, round}
+        )
+        |> subgame([{subdeck_1, subdeck_2} | configurations], {game, round + 1})
     end
   end
 

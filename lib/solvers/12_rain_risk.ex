@@ -18,7 +18,9 @@ defmodule RainRisk do
   def parse_instructions(lines) do
     lines
     |> Enum.map(&String.graphemes(&1))
-    |> Enum.map(fn [symbol | number] -> {Map.fetch!(actions(), String.to_atom(symbol)), Helper.to_integer(Enum.join(number))} end)
+    |> Enum.map(fn [symbol | number] ->
+      {Map.fetch!(actions(), String.to_atom(symbol)), Helper.to_integer(Enum.join(number))}
+    end)
   end
 
   def vectors do
@@ -26,7 +28,7 @@ defmodule RainRisk do
   end
 
   def actions do
-    %{"N": :north, "S": :south, "E": :east, "W": :west, "L": :left, "F": :forward, "R": :right}
+    %{N: :north, S: :south, E: :east, W: :west, L: :left, F: :forward, R: :right}
   end
 
   def positions do
@@ -55,9 +57,14 @@ defmodule RainRisk do
 
   def execute({action, number} = instruction, coordinates, current_facing) do
     cond do
-      action == :forward      -> {execute_position({current_facing, number}, coordinates), current_facing}
-      is_position?(action)    -> {execute_position(instruction, coordinates), current_facing}
-      is_orientation?(action) -> {coordinates, execute_orientation(instruction, current_facing)}
+      action == :forward ->
+        {execute_position({current_facing, number}, coordinates), current_facing}
+
+      is_position?(action) ->
+        {execute_position(instruction, coordinates), current_facing}
+
+      is_orientation?(action) ->
+        {coordinates, execute_orientation(instruction, current_facing)}
     end
   end
 
@@ -78,24 +85,44 @@ defmodule RainRisk do
   def new_orientation_1(turns, current_facing) do
     directions = %{east: 0, south: 1, west: 2, north: 3}
     new_orientation_index = Map.fetch!(directions, current_facing) |> Kernel.+(turns)
-    new_orientation_index = if new_orientation_index < 0, do: new_orientation_index + 4, else: rem(new_orientation_index, 4)
 
-    Enum.find(directions, fn {_orientation, index} -> index == new_orientation_index end) |> elem(0)
+    new_orientation_index =
+      if new_orientation_index < 0,
+        do: new_orientation_index + 4,
+        else: rem(new_orientation_index, 4)
+
+    Enum.find(directions, fn {_orientation, index} -> index == new_orientation_index end)
+    |> elem(0)
   end
 
   def travel_to_waypoint([], ship_coordinates, _waypoint_coordinates), do: ship_coordinates
 
-  def travel_to_waypoint([instruction | navigation_instructions], ship_coordinates, waypoint_coordinates) do
-    {new_ship_coordinates, new_waypoint_coordinates} = execute_part_two_instruction(instruction, ship_coordinates, waypoint_coordinates)
+  def travel_to_waypoint(
+        [instruction | navigation_instructions],
+        ship_coordinates,
+        waypoint_coordinates
+      ) do
+    {new_ship_coordinates, new_waypoint_coordinates} =
+      execute_part_two_instruction(instruction, ship_coordinates, waypoint_coordinates)
 
     travel_to_waypoint(navigation_instructions, new_ship_coordinates, new_waypoint_coordinates)
   end
 
-  def execute_part_two_instruction({action, _number} = instruction, ship_coordinates, waypoint_coordinates) do
+  def execute_part_two_instruction(
+        {action, _number} = instruction,
+        ship_coordinates,
+        waypoint_coordinates
+      ) do
     cond do
-      action == :forward      -> {execute_homothecy(instruction, ship_coordinates, waypoint_coordinates), waypoint_coordinates}
-      is_position?(action)    -> {ship_coordinates, execute_translation(instruction, waypoint_coordinates)}
-      is_orientation?(action) -> {ship_coordinates, execute_rotation(instruction, waypoint_coordinates)}
+      action == :forward ->
+        {execute_homothecy(instruction, ship_coordinates, waypoint_coordinates),
+         waypoint_coordinates}
+
+      is_position?(action) ->
+        {ship_coordinates, execute_translation(instruction, waypoint_coordinates)}
+
+      is_orientation?(action) ->
+        {ship_coordinates, execute_rotation(instruction, waypoint_coordinates)}
     end
   end
 
@@ -117,15 +144,25 @@ defmodule RainRisk do
 
   def new_orientation_2(turns, waypoint_coordinates) do
     abs_turns = abs(turns)
-    clockwise_rotation_matrix = [{cos(abs_turns), - sin(abs_turns)}, {sin(abs_turns), cos(abs_turns)}]
-    anticlockwise_rotation_matrix = [{cos(abs_turns), sin(abs_turns)}, {- sin(abs_turns), cos(abs_turns)}]
-    rotation_matrix = if turns > 0, do: clockwise_rotation_matrix, else: anticlockwise_rotation_matrix    
-    
+
+    clockwise_rotation_matrix = [
+      {cos(abs_turns), -sin(abs_turns)},
+      {sin(abs_turns), cos(abs_turns)}
+    ]
+
+    anticlockwise_rotation_matrix = [
+      {cos(abs_turns), sin(abs_turns)},
+      {-sin(abs_turns), cos(abs_turns)}
+    ]
+
+    rotation_matrix =
+      if turns > 0, do: clockwise_rotation_matrix, else: anticlockwise_rotation_matrix
+
     matrix_multiplication(waypoint_coordinates, rotation_matrix)
   end
 
   def matrix_multiplication({x, y}, [{a, b}, {c, d}]) do
-    {(x * a) + (y * c), (x * b) + (y * d)}
+    {x * a + y * c, x * b + y * d}
   end
 
   def pair_substract({a, b}, {c, d}) do

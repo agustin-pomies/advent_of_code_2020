@@ -5,14 +5,20 @@ defmodule AllergenAssessment do
   end
 
   def parse_food(food_line) do
-    regex = ~r/^(?<ingredients>^[[:alpha:][:blank:]]+) \(contains (?<allergens>[[:alpha:],[:blank:]]+)\)$/
-    
+    regex =
+      ~r/^(?<ingredients>^[[:alpha:][:blank:]]+) \(contains (?<allergens>[[:alpha:],[:blank:]]+)\)$/
+
     case Regex.named_captures(regex, food_line) do
-      %{"ingredients" => ingredients, "allergens" => allergens} -> %{"ingredients" => String.split(ingredients, " ", trim: true), "allergens" => String.split(allergens, ", ", trim: true)}
-      nil                                                       -> IO.puts(food_line)
+      %{"ingredients" => ingredients, "allergens" => allergens} ->
+        %{
+          "ingredients" => String.split(ingredients, " ", trim: true),
+          "allergens" => String.split(allergens, ", ", trim: true)
+        }
+
+      nil ->
+        IO.puts(food_line)
     end
   end
-
 
   def part_one do
     get_data()
@@ -47,19 +53,28 @@ defmodule AllergenAssessment do
   end
 
   def update_occurrences(occurrences, ingredients) do
-    Enum.reduce(ingredients, occurrences, fn ingredient, new_occurences -> Map.update(new_occurences, ingredient, 1, &(&1 + 1)) end)
+    Enum.reduce(ingredients, occurrences, fn ingredient, new_occurences ->
+      Map.update(new_occurences, ingredient, 1, &(&1 + 1))
+    end)
   end
 
   def update_possibilities(possibilities, allergens, ingredients) do
-    Enum.reduce(allergens, possibilities, fn allergen, new_possibilities -> update_allergen_possibilities(new_possibilities, allergen, ingredients) end)
+    Enum.reduce(allergens, possibilities, fn allergen, new_possibilities ->
+      update_allergen_possibilities(new_possibilities, allergen, ingredients)
+    end)
   end
 
   def update_allergen_possibilities(new_possibilities, allergen, ingredients) do
-    Map.update(new_possibilities, allergen, Enum.into(ingredients, MapSet.new), &(common_elements(&1, ingredients)))
+    Map.update(
+      new_possibilities,
+      allergen,
+      Enum.into(ingredients, MapSet.new()),
+      &common_elements(&1, ingredients)
+    )
   end
 
   def common_elements(current_possibilities, ingredients) do
-    MapSet.intersection(current_possibilities, Enum.into(ingredients, MapSet.new))
+    MapSet.intersection(current_possibilities, Enum.into(ingredients, MapSet.new()))
   end
 
   def occurrences(occurrences_and_possibilities) do
@@ -83,7 +98,7 @@ defmodule AllergenAssessment do
       occurrences_and_possibilities
       |> possibilities()
       |> Map.values()
-      |> Enum.reduce(&(MapSet.union(&1, &2)))
+      |> Enum.reduce(&MapSet.union(&1, &2))
       |> MapSet.to_list()
 
     occurrences_and_possibilities
@@ -107,29 +122,34 @@ defmodule AllergenAssessment do
     deduced_ingredients =
       possibilities
       |> Enum.filter(fn {k, v} -> MapSet.size(v) == 1 end)
-      |> Enum.reduce(%{}, fn {allergen, ingredient}, acc -> Map.put(acc, allergen, hd(MapSet.to_list(ingredient))) end)
+      |> Enum.reduce(%{}, fn {allergen, ingredient}, acc ->
+        Map.put(acc, allergen, hd(MapSet.to_list(ingredient)))
+      end)
 
     new_deductions = Map.merge(deductions, deduced_ingredients)
     uncertain_possibilites = Map.drop(possibilities, Map.keys(deduced_ingredients))
 
-    new_possibilities = Enum.reduce(
-      deduced_ingredients,
-      uncertain_possibilites,
-      fn {_, ingredient}, acc -> remove_ingredient_from_options(acc, ingredient) end
-    )
+    new_possibilities =
+      Enum.reduce(
+        deduced_ingredients,
+        uncertain_possibilites,
+        fn {_, ingredient}, acc -> remove_ingredient_from_options(acc, ingredient) end
+      )
 
     determine_allergens_in_ingredients(new_possibilities, new_deductions)
   end
 
   def remove_ingredient_from_options(uncertain_possibilites, ingredient) do
-    for {allergen, options} <- uncertain_possibilites, into: %{}, do: {allergen, MapSet.delete(options, ingredient)}
+    for {allergen, options} <- uncertain_possibilites,
+        into: %{},
+        do: {allergen, MapSet.delete(options, ingredient)}
   end
 
   def canonical_dangerous_ingredient_list(allergens_in_ingredients) do
     allergens_in_ingredients
     |> Map.to_list()
     |> Enum.sort(&(elem(&1, 0) <= elem(&2, 0)))
-    |> Enum.map(&(elem(&1, 1)))
+    |> Enum.map(&elem(&1, 1))
     |> Enum.join(",")
   end
 end

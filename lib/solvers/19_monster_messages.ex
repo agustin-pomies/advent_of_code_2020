@@ -2,13 +2,13 @@ defmodule MonsterMessages do
   def get_data do
     [rules, messages] =
       IOModule.get_input(19, "\n\n")
-      |> Enum.map(&(String.split(&1, "\n", trim: true)))
+      |> Enum.map(&String.split(&1, "\n", trim: true))
 
     parsed_rules =
       rules
-      |> Enum.map(&(parse_rule(&1)))
-      |> Enum.map(fn [a, b] -> {a, b} end) 
-      |> Map.new
+      |> Enum.map(&parse_rule(&1))
+      |> Enum.map(fn [a, b] -> {a, b} end)
+      |> Map.new()
 
     %{rules: parsed_rules, messages: messages}
   end
@@ -22,21 +22,21 @@ defmodule MonsterMessages do
   def parse_rule_usage(string) do
     string
     |> String.split("|", trim: true)
-    |> Enum.map(&(String.split(&1, " ", trim: true)))
-    |> Enum.map(fn alternative -> Enum.map(alternative, &(parse_char(&1))) end)
+    |> Enum.map(&String.split(&1, " ", trim: true))
+    |> Enum.map(fn alternative -> Enum.map(alternative, &parse_char(&1)) end)
   end
 
   def parse_char(char) do
     cond do
       number?(char) -> String.to_integer(char)
-      true          -> String.replace(char, "\"", "")
+      true -> String.replace(char, "\"", "")
     end
   end
 
   def number?(char) do
     case Integer.parse(char) do
-      {_number, _}  -> true
-      :error        -> false
+      {_number, _} -> true
+      :error -> false
     end
   end
 
@@ -45,7 +45,9 @@ defmodule MonsterMessages do
     rules = Map.fetch!(data, :rules)
     messages = Map.fetch!(data, :messages)
 
-    Enum.reduce(messages, 0, fn message, acc -> acc + if string_meets_rule?(message, rules, [0]), do: 1, else: 0 end)
+    Enum.reduce(messages, 0, fn message, acc ->
+      acc + if string_meets_rule?(message, rules, [0]), do: 1, else: 0
+    end)
   end
 
   def part_two do
@@ -53,7 +55,9 @@ defmodule MonsterMessages do
     rules = Map.fetch!(data, :rules)
     messages = Map.fetch!(data, :messages)
 
-    Enum.reduce(messages, 0, fn message, acc -> acc + if string_meets_rule?(message, rules, [0]), do: 1, else: 0 end)
+    Enum.reduce(messages, 0, fn message, acc ->
+      acc + if string_meets_rule?(message, rules, [0]), do: 1, else: 0
+    end)
   end
 
   def rules_adjustment(data) do
@@ -71,13 +75,17 @@ defmodule MonsterMessages do
   def string_meets_rule?("", _global_rules, []), do: true
   def string_meets_rule?("", _global_rules, rules) when length(rules) != 0, do: false
   def string_meets_rule?(string, _global_rules, []) when string != "", do: false
+
   def string_meets_rule?(string, global_rules, [rule | remaining_rules] = rules) do
     [character | remaining_string] = String.graphemes(string)
     remaining_string = Enum.join(remaining_string, "")
 
     case rule do
-      rule when is_integer(rule)    -> split_parsing(string, global_rules, rule, remaining_rules)
-      rule when is_bitstring(rule)  -> character == rule && string_meets_rule?(remaining_string, global_rules, remaining_rules)
+      rule when is_integer(rule) ->
+        split_parsing(string, global_rules, rule, remaining_rules)
+
+      rule when is_bitstring(rule) ->
+        character == rule && string_meets_rule?(remaining_string, global_rules, remaining_rules)
     end
   end
 

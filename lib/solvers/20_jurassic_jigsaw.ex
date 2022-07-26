@@ -1,44 +1,57 @@
 defmodule JurassicJigsaw do
   def get_data do
     IOModule.get_input(20, "\n\n")
-    |> Enum.map(&(parse_tile(&1)))
+    |> Enum.map(&parse_tile(&1))
     |> Enum.into(%{})
   end
 
   def parse_tile(string) do
     string
     |> String.split(":\n", trim: true)
-    |> (fn ["Tile " <> id_number, string_pattern] -> %{String.to_integer(id_number) => parse_pattern(string_pattern)} end).()
+    |> (fn ["Tile " <> id_number, string_pattern] ->
+          %{String.to_integer(id_number) => parse_pattern(string_pattern)}
+        end).()
     |> Enum.reduce(fn elem, acc -> Map.merge(acc, elem) end)
   end
 
   def parse_pattern(string) do
     string
     |> String.split("\n", trim: true)
-    |> Enum.map(&(String.graphemes(&1)))
+    |> Enum.map(&String.graphemes(&1))
   end
 
   def test do
     tiles_with_metadata =
       get_data()
-      |> Enum.map(fn {tile_number, tile_pattern} -> %{tile_number => %{pattern: tile_pattern, transformed: false, neighbours: %{up: nil, down: nil, left: nil, right: nil}}} end)
+      |> Enum.map(fn {tile_number, tile_pattern} ->
+        %{
+          tile_number => %{
+            pattern: tile_pattern,
+            transformed: false,
+            neighbours: %{up: nil, down: nil, left: nil, right: nil}
+          }
+        }
+      end)
       |> Enum.reduce(fn elem, acc -> Map.merge(acc, elem) end)
-    
+
     tiles = tiles_with_metadata
-    borders_to_assemble = for id_1 <- Map.keys(tiles), id_2 <- Map.keys(tiles), id_1 < id_2, do: {id_1, id_2}
+
+    borders_to_assemble =
+      for id_1 <- Map.keys(tiles), id_2 <- Map.keys(tiles), id_1 < id_2, do: {id_1, id_2}
 
     assemble_image(tiles_with_metadata, borders_to_assemble)
     |> IO.inspect()
   end
 
   def assemble_image(tiles_with_metadata, []), do: tiles_with_metadata
+
   def assemble_image(tiles_with_metadata, [{id_1, id_2} = borders_pair | ids]) do
     tile_1 = Map.fetch!(tiles_with_metadata, id_1) |> Map.fetch!(:pattern)
     tile_2 = Map.fetch!(tiles_with_metadata, id_2) |> Map.fetch!(:pattern)
 
     case align_tiles(tile_1, tile_2) do
       :no_match -> assemble_image(tiles_with_metadata, ids)
-      match     -> assemble_image(update_tiles(tiles_with_metadata, borders_pair, match), ids)
+      match -> assemble_image(update_tiles(tiles_with_metadata, borders_pair, match), ids)
     end
   end
 
@@ -47,11 +60,11 @@ defmodule JurassicJigsaw do
 
     results =
       possibilities
-      |> Enum.map(&(borders_match?(&1)))
+      |> Enum.map(&borders_match?(&1))
       |> Enum.filter(fn elem -> elem != nil end)
 
     case results do
-      []     -> :no_match
+      [] -> :no_match
       [elem] -> elem
     end
   end
@@ -59,16 +72,19 @@ defmodule JurassicJigsaw do
   def borders(pattern) do
     %{
       up: List.first(pattern),
-      right: Enum.map(pattern, &(List.last(&1))),
+      right: Enum.map(pattern, &List.last(&1)),
       down: List.last(pattern) |> Enum.reverse(),
-      left: Enum.map(pattern, &(List.first(&1))) |> Enum.reverse(),
+      left: Enum.map(pattern, &List.first(&1)) |> Enum.reverse()
     }
   end
 
   def update_tiles(tiles_with_metadata, {id_1, id_2}, {direction_1, direction_2, orientation}) do
     tile_1_metadata = Map.fetch!(tiles_with_metadata, id_1)
     tile_2_metadata = Map.fetch!(tiles_with_metadata, id_2)
-    transformation_required? = direction_1 != opposite_direction(direction_2) || orientation == "flipped"
+
+    transformation_required? =
+      direction_1 != opposite_direction(direction_2) || orientation == "flipped"
+
     tile_1_old_pattern = Map.fetch!(tile_1_metadata, :pattern)
 
     tile_1_new_metadata =
@@ -89,7 +105,7 @@ defmodule JurassicJigsaw do
       tile_1_metadata
       |> Map.fetch!(:neighbours)
       |> Map.put(opposite_direction(direction_2), id_2)
-    
+
     tile_1_new_metadata = Map.put(tile_1_new_metadata, :neighbours, tile_1_new_neighbours)
 
     tile_2_new_neighbours =
@@ -106,7 +122,9 @@ defmodule JurassicJigsaw do
 
   def part_one do
     tiles = get_data() |> filter_borders()
-    borders_to_assemble = for id_1 <- Map.keys(tiles), id_2 <- Map.keys(tiles), id_1 < id_2, do: {id_1, id_2}
+
+    borders_to_assemble =
+      for id_1 <- Map.keys(tiles), id_2 <- Map.keys(tiles), id_1 < id_2, do: {id_1, id_2}
 
     determine_tile_relations(tiles, borders_to_assemble, [])
     |> IO.inspect()
@@ -121,9 +139,9 @@ defmodule JurassicJigsaw do
   def build_borders(pattern) do
     %{
       up: List.first(pattern),
-      right: Enum.map(pattern, &(List.last(&1))),
+      right: Enum.map(pattern, &List.last(&1)),
       down: List.last(pattern) |> Enum.reverse(),
-      left: Enum.map(pattern, &(List.first(&1))) |> Enum.reverse(),
+      left: Enum.map(pattern, &List.first(&1)) |> Enum.reverse()
     }
   end
 
@@ -133,18 +151,28 @@ defmodule JurassicJigsaw do
     |> List.flatten()
     |> Enum.frequencies()
     |> Enum.filter(fn {_id, count} -> count == 2 end)
-    |> Enum.map(&(elem(&1, 0)))
+    |> Enum.map(&elem(&1, 0))
   end
 
   def determine_tile_relations(_, [], board), do: board
+
   def determine_tile_relations(tiles, [{id_1, id_2} | ids], board) do
     tile_1 = Map.fetch!(tiles, id_1) |> Map.to_list()
     tile_2 = Map.fetch!(tiles, id_2) |> Map.to_list()
 
     case align_tiles(tile_1, tile_2) do
-      :no_match                               -> determine_tile_relations(tiles, ids, board)
-      {direction_1, direction_2, "original"}  -> determine_tile_relations(tiles, ids, [{{id_1, direction_1}, {id_2, direction_2}, "original"}| board])
-      {direction_1, direction_2, "flipped"}   -> determine_tile_relations(tiles, ids, [{{id_1, direction_1}, {id_2, direction_2}, "flipped"}| board])
+      :no_match ->
+        determine_tile_relations(tiles, ids, board)
+
+      {direction_1, direction_2, "original"} ->
+        determine_tile_relations(tiles, ids, [
+          {{id_1, direction_1}, {id_2, direction_2}, "original"} | board
+        ])
+
+      {direction_1, direction_2, "flipped"} ->
+        determine_tile_relations(tiles, ids, [
+          {{id_1, direction_1}, {id_2, direction_2}, "flipped"} | board
+        ])
     end
   end
 
@@ -153,20 +181,20 @@ defmodule JurassicJigsaw do
 
     results =
       possibilities
-      |> Enum.map(&(borders_match?(&1)))
+      |> Enum.map(&borders_match?(&1))
       |> Enum.filter(fn elem -> elem != nil end)
 
     case results do
-      []     -> :no_match
+      [] -> :no_match
       [elem] -> elem
     end
   end
 
   def borders_match?({{side_1, border_1}, {side_2, border_2}}) do
     cond do
-      same_border?(border_1, Enum.reverse(border_2))  -> {side_1, side_2, "original"}
-      same_border?(border_1, border_2)                -> {side_1, side_2, "flipped"}
-      true                                            -> nil
+      same_border?(border_1, Enum.reverse(border_2)) -> {side_1, side_2, "original"}
+      same_border?(border_1, border_2) -> {side_1, side_2, "flipped"}
+      true -> nil
     end
   end
 
@@ -177,7 +205,7 @@ defmodule JurassicJigsaw do
   def apply_rotation(pattern, {direction_1, direction_2}) do
     if direction_1 != opposite_direction(direction_2) do
       pattern
-      |> Enum.map(&(Enum.reverse(&1)))
+      |> Enum.map(&Enum.reverse(&1))
       |> transpose()
       |> apply_rotation({next_direction(direction_1), direction_2})
     else
@@ -186,21 +214,26 @@ defmodule JurassicJigsaw do
   end
 
   def apply_flip(pattern, {_, "original"}), do: pattern
+
   def apply_flip(pattern, {:down, "flipped"}) do
-    Enum.map(pattern, &(Enum.reverse(&1)))
+    Enum.map(pattern, &Enum.reverse(&1))
   end
+
   def apply_flip(pattern, {:up, "flipped"}) do
-    Enum.map(pattern, &(Enum.reverse(&1)))
+    Enum.map(pattern, &Enum.reverse(&1))
   end
+
   def apply_flip(pattern, {:right, "flipped"}) do
     Enum.reverse(pattern)
   end
+
   def apply_flip(pattern, {:left, "flipped"}) do
     Enum.reverse(pattern)
   end
 
   def transpose([]), do: []
-  def transpose([[]|_]), do: []
+  def transpose([[] | _]), do: []
+
   def transpose(a) do
     [Enum.map(a, &hd/1) | transpose(Enum.map(a, &tl/1))]
   end
@@ -238,19 +271,19 @@ defmodule JurassicJigsaw do
 
   def next_direction(direction) do
     case direction do
-      :up    -> :right
+      :up -> :right
       :right -> :down
-      :down  -> :left
-      :left  -> :up
+      :down -> :left
+      :left -> :up
     end
   end
 
   def opposite_direction(direction) do
     case direction do
-      :up     -> :down
-      :left   -> :right
-      :down   -> :up
-      :right  -> :left
+      :up -> :down
+      :left -> :right
+      :down -> :up
+      :right -> :left
     end
   end
 
@@ -258,11 +291,14 @@ defmodule JurassicJigsaw do
     tiles = get_data()
 
     borders = tiles |> filter_borders()
-    borders_to_assemble = for id_1 <- Map.keys(borders), id_2 <- Map.keys(borders), id_1 < id_2, do: {id_1, id_2}
+
+    borders_to_assemble =
+      for id_1 <- Map.keys(borders), id_2 <- Map.keys(borders), id_1 < id_2, do: {id_1, id_2}
 
     borders
     |> determine_tile_relations(borders_to_assemble, [])
     |> assemble_board()
+
     0
   end
 
@@ -275,7 +311,7 @@ defmodule JurassicJigsaw do
     tile
     |> Enum.drop(1)
     |> Enum.drop(-1)
-    |> Enum.map(&(Enum.drop(&1, 1)))
-    |> Enum.map(&(Enum.drop(&1, -1)))
+    |> Enum.map(&Enum.drop(&1, 1))
+    |> Enum.map(&Enum.drop(&1, -1))
   end
 end

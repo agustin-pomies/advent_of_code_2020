@@ -23,25 +23,33 @@ defmodule SeatingSystem do
     rows = rows |> Enum.map(&String.graphemes(&1))
     number_of_rows = rows |> length()
     number_of_columns = rows |> hd() |> length()
-    
-    rows_range = 0..number_of_rows-1
-    columns_range = 0..number_of_columns-1
 
-    rows = Enum.map(rows, fn row -> Enum.map(row, fn symbol -> Map.fetch!(tile_type(), symbol) end) end)
+    rows_range = 0..(number_of_rows - 1)
+    columns_range = 0..(number_of_columns - 1)
+
+    rows =
+      Enum.map(rows, fn row -> Enum.map(row, fn symbol -> Map.fetch!(tile_type(), symbol) end) end)
+
     rows = Enum.zip(rows_range, rows)
     rows = Enum.map(rows, fn {row_index, row} -> {row_index, Enum.zip(columns_range, row)} end)
 
-    board = Enum.reduce(
-      rows,
-      %{},
-      fn {row_index, row}, acc -> 
-        Map.merge(acc, Enum.reduce(
-          row,
-          %{},
-          fn {column_index, element}, acc -> Map.merge(acc, %{{row_index, column_index} => element}) end
-        ))
-      end
-    )
+    board =
+      Enum.reduce(
+        rows,
+        %{},
+        fn {row_index, row}, acc ->
+          Map.merge(
+            acc,
+            Enum.reduce(
+              row,
+              %{},
+              fn {column_index, element}, acc ->
+                Map.merge(acc, %{{row_index, column_index} => element})
+              end
+            )
+          )
+        end
+      )
 
     {board, {number_of_rows, number_of_columns}}
   end
@@ -52,37 +60,67 @@ defmodule SeatingSystem do
 
   def reach_stable_configuration({board, _dimensions} = metaboard, new_seat) do
     new_metaboard = new_generation(metaboard, new_seat)
-    {new_board, _dimensions} = new_metaboard 
+    {new_board, _dimensions} = new_metaboard
 
-    if Map.equal?(board, new_board), do: board, else: reach_stable_configuration(new_metaboard, new_seat)
+    if Map.equal?(board, new_board),
+      do: board,
+      else: reach_stable_configuration(new_metaboard, new_seat)
   end
 
   def new_generation({board, dimensions} = metaboard, new_seat) do
     new_board =
-      Enum.map(board, fn {coord, seat_state} -> {coord, new_seat.(metaboard, {coord, seat_state})} end)
-      |> Map.new
+      Enum.map(board, fn {coord, seat_state} ->
+        {coord, new_seat.(metaboard, {coord, seat_state})}
+      end)
+      |> Map.new()
 
     {new_board, dimensions}
   end
 
   def consecutive_seats(metaboard, {coord, seat_state}) do
     case seat_state do
-      :floor  -> :floor
-      :empty  -> if neighbors(metaboard, coord) |> Enum.all?(fn elem -> elem != :busy end), do: :busy, else: :empty
-      :busy   -> if neighbors(metaboard, coord) |> Enum.filter(&(&1 == :busy)) |> length() |> Kernel.>=(4), do: :empty, else: :busy
+      :floor ->
+        :floor
+
+      :empty ->
+        if neighbors(metaboard, coord) |> Enum.all?(fn elem -> elem != :busy end),
+          do: :busy,
+          else: :empty
+
+      :busy ->
+        if neighbors(metaboard, coord) |> Enum.filter(&(&1 == :busy)) |> length() |> Kernel.>=(4),
+          do: :empty,
+          else: :busy
     end
   end
 
   def change_state_using_visible_seats(metaboard, {coord, seat_state}) do
     case seat_state do
-      :floor  -> :floor
-      :empty  -> if visible_seats(metaboard, coord) |> Enum.all?(fn elem -> elem != :busy end), do: :busy, else: :empty
-      :busy   -> if visible_seats(metaboard, coord) |> Enum.filter(&(&1 == :busy)) |> length() |> Kernel.>=(5), do: :empty, else: :busy
+      :floor ->
+        :floor
+
+      :empty ->
+        if visible_seats(metaboard, coord) |> Enum.all?(fn elem -> elem != :busy end),
+          do: :busy,
+          else: :empty
+
+      :busy ->
+        if visible_seats(metaboard, coord)
+           |> Enum.filter(&(&1 == :busy))
+           |> length()
+           |> Kernel.>=(5),
+           do: :empty,
+           else: :busy
     end
   end
 
   def neighbors({board, dimensions}, {a, b}) do
-    coordinates = for x <- a-1..a+1, y <- b-1..b+1, x != a || y != b, in_range({x, y}, dimensions), do: {x, y}
+    coordinates =
+      for x <- (a - 1)..(a + 1),
+          y <- (b - 1)..(b + 1),
+          x != a || y != b,
+          in_range({x, y}, dimensions),
+          do: {x, y}
 
     Enum.map(coordinates, fn coord -> Map.fetch!(board, coord) end)
   end
@@ -98,8 +136,8 @@ defmodule SeatingSystem do
 
     if in_range(new_coordinates, dimensions) do
       case Map.fetch!(board, new_coordinates) do
-        :floor      -> travel_while(metaboard, new_coordinates, movement)
-        seat_state  -> seat_state
+        :floor -> travel_while(metaboard, new_coordinates, movement)
+        seat_state -> seat_state
       end
     else
       :floor
@@ -107,7 +145,7 @@ defmodule SeatingSystem do
   end
 
   def in_range({x, y}, {max_x, max_y}) do
-    (0 <= x && x < max_x) && 0 <= y && y < max_y
+    0 <= x && x < max_x && 0 <= y && y < max_y
   end
 
   # Debugging tools
@@ -128,7 +166,7 @@ defmodule SeatingSystem do
     |> Enum.group_by(fn {coord, _seat_state} -> elem(coord, 0) end)
     |> Map.values()
     |> Enum.map(fn row -> Enum.sort_by(row, fn {coord, _seat_state} -> elem(coord, 1) end) end)
-    |> Enum.map(fn row -> Enum.map(row, &(elem(&1, 1))) end)
+    |> Enum.map(fn row -> Enum.map(row, &elem(&1, 1)) end)
   end
 
   def board_to_chars(board) do

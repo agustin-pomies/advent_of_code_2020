@@ -19,39 +19,51 @@ defmodule CrabCombatTest do
     }
   end
 
-  test_with_mock "simple game for normal combat", %{simple_game: simple_game},
-    CrabCombat, [:passthrough], [get_data: fn() -> simple_game end] do
-
+  test_with_mock "simple game for normal combat",
+                 %{simple_game: simple_game},
+                 CrabCombat,
+                 [:passthrough],
+                 get_data: fn -> simple_game end do
     assert CrabCombat.part_one() == 27
   end
 
-  test_with_mock "normal game for normal combat", %{depth_1_game: depth_1_game},
-    CrabCombat, [:passthrough], [get_data: fn() -> depth_1_game end] do
-
+  test_with_mock "normal game for normal combat",
+                 %{depth_1_game: depth_1_game},
+                 CrabCombat,
+                 [:passthrough],
+                 get_data: fn -> depth_1_game end do
     assert CrabCombat.part_one() == 80
   end
 
-  test_with_mock "example game for normal combat", %{example: example},
-    CrabCombat, [:passthrough], [get_data: fn() -> example end] do
-
+  test_with_mock "example game for normal combat",
+                 %{example: example},
+                 CrabCombat,
+                 [:passthrough],
+                 get_data: fn -> example end do
     assert CrabCombat.part_one() == 306
   end
 
-  test_with_mock "simple game for recursive combat", %{simple_game: simple_game},
-    CrabCombat, [:passthrough], [get_data: fn() -> simple_game end] do
-
+  test_with_mock "simple game for recursive combat",
+                 %{simple_game: simple_game},
+                 CrabCombat,
+                 [:passthrough],
+                 get_data: fn -> simple_game end do
     assert CrabCombat.part_two() == 27
   end
 
-  test_with_mock "depth-1 game for recursive combat", %{depth_1_game: depth_1_game},
-    CrabCombat, [:passthrough], [get_data: fn() -> depth_1_game end] do
-
+  test_with_mock "depth-1 game for recursive combat",
+                 %{depth_1_game: depth_1_game},
+                 CrabCombat,
+                 [:passthrough],
+                 get_data: fn -> depth_1_game end do
     assert CrabCombat.part_two() == 66
   end
 
-  test_with_mock "example game for recursive combat", %{example: example},
-    CrabCombat, [:passthrough], [get_data: fn() -> example end] do
-
+  test_with_mock "example game for recursive combat",
+                 %{example: example},
+                 CrabCombat,
+                 [:passthrough],
+                 get_data: fn -> example end do
     assert CrabCombat.part_two() == 291
   end
 end

@@ -26,12 +26,14 @@ defmodule ReportRepair do
 
   defp combinations(_, 0), do: [[]]
   defp combinations([], _), do: []
-  defp combinations([h|t], m) do
-    (for l <- combinations(t, m-1), do: [h|l]) ++ combinations(t, m)
+
+  defp combinations([h | t], m) do
+    for(l <- combinations(t, m - 1), do: [h | l]) ++ combinations(t, m)
   end
 
   defp check_sum([]), do: nil
-  defp check_sum([h|t]) do
+
+  defp check_sum([h | t]) do
     if Enum.reduce(h, 0, &+/2) == @checksum, do: h, else: check_sum(t)
   end
 
